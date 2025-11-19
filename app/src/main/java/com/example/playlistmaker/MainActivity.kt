@@ -1,7 +1,7 @@
 package com.example.playlistmaker
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -93,7 +93,8 @@ fun MainScreen() {
                         iconResId = R.drawable.ic_search_24,
                         textResId = R.string.search,
                         onClick = {
-                            Toast.makeText(context, context.getString(R.string.toast_message_search), Toast.LENGTH_SHORT).show()
+                            val searchIntent = Intent(context, SearchActivity::class.java)
+                            context.startActivity(searchIntent)
                         }
                     )
                     HorizontalDivider(thickness = 1.dp)
@@ -101,7 +102,7 @@ fun MainScreen() {
                         iconResId = R.drawable.ic_playlist_24,
                         textResId = R.string.playlists,
                         onClick = {
-                            Toast.makeText(context, context.getString(R.string.toast_message_playlists), Toast.LENGTH_SHORT).show()
+                            // Переход на экран медиатеки будет реализован позже
                         }
                     )
                     HorizontalDivider(thickness = 1.dp)
@@ -109,7 +110,7 @@ fun MainScreen() {
                         iconResId = R.drawable.ic_favorite_24,
                         textResId = R.string.favorites,
                         onClick = {
-                            Toast.makeText(context, context.getString(R.string.toast_message_favorites), Toast.LENGTH_SHORT).show()
+                            // Переход на экран медиатеки будет реализован позже
                         }
                     )
                     HorizontalDivider(thickness = 1.dp)
@@ -117,7 +118,8 @@ fun MainScreen() {
                         iconResId = R.drawable.ic_settings_24,
                         textResId = R.string.settings,
                         onClick = {
-                            Toast.makeText(context, context.getString(R.string.toast_message_settings), Toast.LENGTH_SHORT).show()
+                            val settingsIntent = Intent(context, SettingsActivity::class.java)
+                            context.startActivity(settingsIntent)
                         }
                     )
                 }
