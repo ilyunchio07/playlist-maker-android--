@@ -1,3 +1,13 @@
 <resources>
-    <string name="app_name">Playlist Maker</string>
+    <string name="app_name">Playlist maker</string>
+
+    <string name="search">Поиск</string>
+    <string name="playlists">Плейлисты</string>
+    <string name="favorites">Избранное</string>
+    <string name="settings">Настройки</string>
+
+    <string name="toast_message_search">Нажата кнопка "Поиск"</string>
+    <string name="toast_message_playlists">Нажата кнопка "Плейлисты"</string>
+    <string name="toast_message_favorites">Нажата кнопка "Избранное"</string>
+    <string name="toast_message_settings">Нажата кнопка "Настройки"</string>
 </resources>
