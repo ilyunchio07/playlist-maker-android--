@@ -1,11 +1,9 @@
 package com.example.playlistmaker
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,39 +20,66 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
+import androidx.compose.foundation.clickable
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             PlaylistMakerTheme {
-                MainScreen()
+                val navController = rememberNavController()
+                PlaylistHost(navController = navController)
             }
+        }
+    }
+}
+
+@Composable
+fun PlaylistHost(navController: NavHostController) {
+    NavHost(navController = navController, startDestination = Screen.MAIN.route) {
+        composable(Screen.MAIN.route) {
+            MainScreen(
+                onSearchClick = { navController.navigate(Screen.SEARCH.route) },
+                onSettingsClick = { navController.navigate(Screen.SETTINGS.route) },
+                onMediaLibraryClick = { }
+            )
+        }
+
+        composable(Screen.SEARCH.route) {
+            SearchScreen(onBackClick = { navController.popBackStack() })
+        }
+
+        composable(Screen.SETTINGS.route) {
+            SettingsScreen(onBackClick = { navController.popBackStack() })
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
-    val context = LocalContext.current
-
+fun MainScreen(
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onMediaLibraryClick: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -92,35 +117,25 @@ fun MainScreen() {
                     MainMenuItem(
                         iconResId = R.drawable.ic_search_24,
                         textResId = R.string.search,
-                        onClick = {
-                            val searchIntent = Intent(context, SearchActivity::class.java)
-                            context.startActivity(searchIntent)
-                        }
+                        onClick = onSearchClick
                     )
                     HorizontalDivider(thickness = 1.dp)
                     MainMenuItem(
                         iconResId = R.drawable.ic_playlist_24,
                         textResId = R.string.playlists,
-                        onClick = {
-                            // Переход на экран медиатеки будет реализован позже
-                        }
+                        onClick = onMediaLibraryClick
                     )
                     HorizontalDivider(thickness = 1.dp)
                     MainMenuItem(
                         iconResId = R.drawable.ic_favorite_24,
                         textResId = R.string.favorites,
-                        onClick = {
-                            // Переход на экран медиатеки будет реализован позже
-                        }
+                        onClick = onMediaLibraryClick
                     )
                     HorizontalDivider(thickness = 1.dp)
                     MainMenuItem(
                         iconResId = R.drawable.ic_settings_24,
                         textResId = R.string.settings,
-                        onClick = {
-                            val settingsIntent = Intent(context, SettingsActivity::class.java)
-                            context.startActivity(settingsIntent)
-                        }
+                        onClick = onSettingsClick
                     )
                 }
             }
@@ -138,7 +153,7 @@ fun MainMenuItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(66.dp)
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick) // Теперь сюда передается лямбда из навигации
             .padding(vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -165,13 +180,5 @@ fun MainMenuItem(
             modifier = Modifier.size(24.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainScreenPreview() {
-    PlaylistMakerTheme {
-        MainScreen()
     }
 }
