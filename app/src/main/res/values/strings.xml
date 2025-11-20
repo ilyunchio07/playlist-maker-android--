@@ -10,4 +10,16 @@
     <string name="toast_message_playlists">Нажата кнопка "Плейлисты"</string>
     <string name="toast_message_favorites">Нажата кнопка "Избранное"</string>
     <string name="toast_message_settings">Нажата кнопка "Настройки"</string>
+
+
+    <string name="settings_dark_theme">Темная тема</string>
+    <string name="settings_share">Поделиться приложением</string>
+    <string name="settings_support">Написать в поддержку</string>
+    <string name="settings_agreement">Пользовательское соглашение</string>
+
+    <string name="share_app_link">https://practicum.yandex.ru/android-developer/</string>
+    <string name="support_email">ilaaleksandrov08@gmail.com</string> <string name="support_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
+    <string name="support_message">Спасибо разработчикам и разработчицам за крутое приложение!</string>
+
+    <string name="offer_link">https://yandex.ru/legal/practicum_offer/</string>
 </resources>
