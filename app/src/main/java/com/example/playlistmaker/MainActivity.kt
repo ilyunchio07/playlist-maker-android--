@@ -39,6 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
 import androidx.compose.foundation.clickable
+import com.example.playlistmaker.Screen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
