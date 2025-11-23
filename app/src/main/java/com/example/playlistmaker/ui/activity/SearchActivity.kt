@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.ui.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -41,6 +41,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.playlistmaker.R
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
 import com.example.playlistmaker.ui.theme.YP_LIGHT_GRAY
 import com.example.playlistmaker.ui.theme.YP_TEXT_GRAY

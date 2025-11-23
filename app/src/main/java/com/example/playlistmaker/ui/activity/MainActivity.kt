@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.ui.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -39,7 +39,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
 import androidx.compose.foundation.clickable
-import com.example.playlistmaker.Screen
+import com.example.playlistmaker.R
+import com.example.playlistmaker.ui.Screen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
