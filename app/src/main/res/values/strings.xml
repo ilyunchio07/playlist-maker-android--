@@ -28,4 +28,9 @@
     <string name="clear_search">Очистить поисковый запрос</string>
     <string name="back_button">Назад</string>
     <string name="track_cover_description">Track cover</string>
+
+    <string name="fab_content_description">Добавить новый элемент</string>
+    <string name="bottom_sheet_message">Панель вызвана кнопкой FAB</string>
+    <string name="main_screen_instruction">Нажми на кнопку + внизу</string>
+    <string name="home_icon_description">Иконка главной страницы</string>
 </resources>
