@@ -87,7 +87,7 @@ fun SearchScreen(
                     IconButton(onClick = { onBackClick() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
@@ -136,7 +136,7 @@ fun SearchScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Поиск",
+                            contentDescription = stringResource(R.string.search),
                             tint = YP_TEXT_GRAY,
                             modifier = Modifier
                                 .size(16.dp)
@@ -155,11 +155,14 @@ fun SearchScreen(
                         if (searchText.isNotEmpty()) {
                             Icon(
                                 imageVector = Icons.Default.Clear,
-                                contentDescription = "Очистить",
+                                contentDescription = stringResource(R.string.clear_search),
                                 tint = YP_TEXT_GRAY,
                                 modifier = Modifier
                                     .size(16.dp)
-                                    .clickable { searchText = "" }
+                                    .clickable {
+                                        searchText = ""
+                                        viewModel.clearSearch()
+                                    }
                             )
                         }
                     }
@@ -186,14 +189,14 @@ fun SearchScreen(
                     }
                     is SearchState.Empty -> {
                         Text(
-                            text = "Ничего не найдено",
+                            text = stringResource(R.string.nothing_found),
                             modifier = Modifier.align(Alignment.Center),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
                     is SearchState.Error -> {
                         Text(
-                            text = "Проблемы со связью\n\nЗагрузка не удалась",
+                            text = stringResource(R.string.connection_error),
                             modifier = Modifier.align(Alignment.Center),
                             style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center

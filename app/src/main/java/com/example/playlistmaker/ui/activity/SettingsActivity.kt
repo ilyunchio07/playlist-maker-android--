@@ -74,7 +74,7 @@ fun SettingsScreen(onBackClick: () -> Unit) {
                     IconButton(onClick = { onBackClick() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Назад",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
