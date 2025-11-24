@@ -32,8 +32,12 @@ class SearchViewModel(
                 _searchScreenState.value = SearchState.Empty
             }
         } catch (e: Exception) {
-            _searchScreenState.value = SearchState.Error("Ошибка сети")
+            _searchScreenState.value = SearchState.Error
         }
+    }
+
+    fun clearSearch() {
+        _searchScreenState.value = SearchState.Initial
     }
 
     companion object {

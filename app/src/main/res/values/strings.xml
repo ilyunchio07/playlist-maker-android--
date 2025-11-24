@@ -22,4 +22,10 @@
     <string name="support_message">Спасибо разработчикам и разработчицам за крутое приложение!</string>
 
     <string name="offer_link">https://yandex.ru/legal/practicum_offer/</string>
+
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="connection_error">Проблемы со связью\n\nЗагрузка не удалась</string>
+    <string name="clear_search">Очистить поисковый запрос</string>
+    <string name="back_button">Назад</string>
+    <string name="track_cover_description">Track cover</string>
 </resources>

@@ -4,7 +4,7 @@ import com.example.playlistmaker.creator.Storage
 import com.example.playlistmaker.data.dto.BaseResponse
 import com.example.playlistmaker.data.dto.TracksSearchRequest
 import com.example.playlistmaker.data.dto.TracksSearchResponse
-import com.example.playlistmaker.domain.api.NetworkClient
+import com.example.playlistmaker.data.network.NetworkClient
 
 class RetrofitNetworkClient(private val storage: Storage) : NetworkClient {
 
