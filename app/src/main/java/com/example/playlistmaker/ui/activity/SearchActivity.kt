@@ -36,6 +36,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +44,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -52,6 +55,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.models.Track
+import com.example.playlistmaker.ui.HistoryRequests
 import com.example.playlistmaker.ui.TrackListItem
 import com.example.playlistmaker.ui.state.SearchState
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
@@ -64,7 +69,10 @@ class SearchActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             PlaylistMakerTheme {
-                SearchScreen(onBackClick = { finish() })
+                SearchScreen(
+                    onBackClick = { finish() },
+                    onTrackClick = {}
+                )
             }
         }
     }
@@ -74,10 +82,27 @@ class SearchActivity : ComponentActivity() {
 @Composable
 fun SearchScreen(
     onBackClick: () -> Unit,
+    onTrackClick: (Track) -> Unit,
     viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)
 ) {
     val screenState by viewModel.searchScreenState.collectAsState()
+    val history by viewModel.historyList.collectAsState()
     var searchText by remember { mutableStateOf("") }
+    var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(Unit) {
+    }
+
+    LaunchedEffect(searchText) {
+        viewModel.updateQuery(searchText)
+    }
+
+    LaunchedEffect(screenState) {
+        if (screenState is SearchState.Content) {
+            focusManager.clearFocus()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -105,25 +130,16 @@ fun SearchScreen(
                 .padding(paddingValues)
                 .padding(top = 8.dp)
         ) {
+
             BasicTextField(
                 value = searchText,
-                onValueChange = {
-                    searchText = it
-                },
-                textStyle = TextStyle(
-                    fontSize = 16.sp,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
+                onValueChange = { searchText = it },
+                textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
                 singleLine = true,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Search
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        viewModel.search(searchText)
-                    }
-                ),
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { viewModel.updateQuery(searchText) }),
+                modifier = Modifier.onFocusChanged { isFocused = it.isFocused },
                 decorationBox = { innerTextField ->
                     Row(
                         modifier = Modifier
@@ -138,9 +154,7 @@ fun SearchScreen(
                             imageVector = Icons.Default.Search,
                             contentDescription = stringResource(R.string.search),
                             tint = YP_TEXT_GRAY,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clickable { viewModel.search(searchText) }
+                            modifier = Modifier.size(16.dp).clickable { viewModel.updateQuery(searchText) }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(modifier = Modifier.weight(1f)) {
@@ -157,12 +171,7 @@ fun SearchScreen(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = stringResource(R.string.clear_search),
                                 tint = YP_TEXT_GRAY,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable {
-                                        searchText = ""
-                                        viewModel.clearSearch()
-                                    }
+                                modifier = Modifier.size(16.dp).clickable { searchText = "" }
                             )
                         }
                     }
@@ -170,39 +179,51 @@ fun SearchScreen(
             )
 
             Box(modifier = Modifier.fillMaxSize()) {
-                when (val state = screenState) {
-                    is SearchState.Loading -> {
-                        CircularProgressIndicator(
-                            modifier = Modifier.align(Alignment.Center),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    is SearchState.Content -> {
-                        LazyColumn(
-                            modifier = Modifier.padding(top = 16.dp),
-                            contentPadding = PaddingValues(bottom = 16.dp)
-                        ) {
-                            items(state.tracks) { track ->
-                                TrackListItem(track = track)
+                if (isFocused && searchText.isEmpty() && history.isNotEmpty()) {
+                    HistoryRequests(
+                        historyList = history.map { it.word },
+                        onClick = { word ->
+                            searchText = word
+                            focusManager.clearFocus()
+                        }
+                    )
+                } else {
+                    when (val state = screenState) {
+                        is SearchState.Loading -> {
+                            CircularProgressIndicator(
+                                modifier = Modifier.align(Alignment.Center),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        is SearchState.Content -> {
+                            LazyColumn(
+                                modifier = Modifier.padding(top = 16.dp),
+                                contentPadding = PaddingValues(bottom = 16.dp)
+                            ) {
+                                items(state.tracks) { track ->
+                                    TrackListItem(
+                                        track = track,
+                                        onClick = { onTrackClick(track) }
+                                    )
+                                }
                             }
                         }
-                    }
-                    is SearchState.Empty -> {
-                        Text(
-                            text = stringResource(R.string.nothing_found),
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                    is SearchState.Error -> {
-                        Text(
-                            text = stringResource(R.string.connection_error),
-                            modifier = Modifier.align(Alignment.Center),
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    is SearchState.Initial -> {
+                        is SearchState.Empty -> {
+                            Text(
+                                text = stringResource(R.string.nothing_found),
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        is SearchState.Error -> {
+                            Text(
+                                text = stringResource(R.string.connection_error),
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        is SearchState.Initial -> { }
                     }
                 }
             }
