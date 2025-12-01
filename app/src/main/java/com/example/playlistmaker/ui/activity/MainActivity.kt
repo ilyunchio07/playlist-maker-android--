@@ -1,9 +1,12 @@
 package com.example.playlistmaker.ui.activity
 
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,17 +32,21 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
-import androidx.compose.foundation.clickable
+import androidx.navigation.navArgument
 import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.ui.Screen
+import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
+import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,31 +62,84 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PlaylistHost(navController: NavHostController) {
+    val context = LocalContext.current
+    val gson = Gson()
+
     NavHost(navController = navController, startDestination = Screen.MAIN.route) {
         composable(Screen.MAIN.route) {
             MainScreen(
                 onSearchClick = { navController.navigate(Screen.SEARCH.route) },
                 onSettingsClick = { navController.navigate(Screen.SETTINGS.route) },
-                onMediaLibraryClick = { }
+                onMediaLibraryClick = { navController.navigate(Screen.MEDIA_LIBRARY.route) },
+                onFavoritesClick = { navController.navigate(Screen.FAVORITES.route) }
             )
         }
 
         composable(Screen.SEARCH.route) {
-            SearchScreen(onBackClick = { navController.popBackStack() })
+            SearchScreen(
+                onBackClick = { navController.popBackStack() },
+                onTrackClick = { track ->
+                    // Сериализуем трек в Json для передачи
+                    val json = Uri.encode(gson.toJson(track))
+                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                }
+            )
         }
 
         composable(Screen.SETTINGS.route) {
             SettingsScreen(onBackClick = { navController.popBackStack() })
         }
+
+        composable(Screen.MEDIA_LIBRARY.route) {
+            MediaLibraryScreen(
+                onBackClick = { navController.popBackStack() },
+                onPlaylistClick = { playlistId ->
+                    Toast.makeText(context, "Плейлист ID: $playlistId", Toast.LENGTH_SHORT).show()
+                },
+                onNewPlaylistClick = {
+                    navController.navigate(Screen.NEW_PLAYLIST.route)
+                }
+            )
+        }
+
+        composable(Screen.NEW_PLAYLIST.route) {
+            NewPlaylistScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.FAVORITES.route) {
+            FavoritesScreen(
+                onTrackClick = { track ->
+                    val json = Uri.encode(Gson().toJson(track))
+                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                }
+            )
+        }
+
+        composable(
+            route = "${Screen.TRACK_DETAILS.route}/{trackJson}",
+            arguments = listOf(navArgument("trackJson") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val json = backStackEntry.arguments?.getString("trackJson")
+            val track = gson.fromJson(json, Track::class.java)
+
+            TrackDetailsScreen(
+                track = track,
+                onBackClick = { navController.popBackStack() },
+                onNewPlaylistClick = { navController.navigate(Screen.NEW_PLAYLIST.route) }
+            )
+        }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onMediaLibraryClick: () -> Unit
+    onMediaLibraryClick: () -> Unit,
+    onFavoritesClick: () -> Unit
 ) {
     Scaffold(
         topBar = {
@@ -131,7 +190,7 @@ fun MainScreen(
                     MainMenuItem(
                         iconResId = R.drawable.ic_favorite_24,
                         textResId = R.string.favorites,
-                        onClick = onMediaLibraryClick
+                        onClick = onFavoritesClick
                     )
                     HorizontalDivider(thickness = 1.dp)
                     MainMenuItem(
@@ -155,7 +214,7 @@ fun MainMenuItem(
         modifier = Modifier
             .fillMaxWidth()
             .height(66.dp)
-            .clickable(onClick = onClick) // Теперь сюда передается лямбда из навигации
+            .clickable(onClick = onClick)
             .padding(vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween

@@ -1,27 +1,39 @@
 package com.example.playlistmaker.data.network
 
-import com.example.playlistmaker.data.dto.TracksSearchRequest
-import com.example.playlistmaker.data.dto.TracksSearchResponse
-import com.example.playlistmaker.data.network.NetworkClient
+import com.example.playlistmaker.creator.DatabaseMock
 import com.example.playlistmaker.domain.api.TracksRepository
 import com.example.playlistmaker.domain.models.Track
+import kotlinx.coroutines.flow.Flow
 
-class TracksRepositoryImpl(private val networkClient: NetworkClient) : TracksRepository {
+class TracksRepositoryImpl(
+    private val database: DatabaseMock
+) : TracksRepository {
 
-    override fun searchTracks(expression: String): List<Track> {
-        val response = networkClient.doRequest(TracksSearchRequest(expression))
-        
-        if (response.resultCode == 200) {
-            return (response as TracksSearchResponse).results.map {
-                Track(
-                    trackName = it.trackName,
-                    artistName = it.artistName,
-                    trackTimeMillis = it.trackTimeMillis,
-                    artworkUrl100 = it.artworkUrl100
-                )
-            }
-        } else {
-            return emptyList()
-        }
+    override suspend fun searchTracks(expression: String): List<Track> {
+        return database.searchTracks(expression)
+    }
+
+    override fun getTrackByNameAndArtist(track: Track): Flow<Track?> {
+        return database.getTrackByNameAndArtist(track)
+    }
+
+    override suspend fun insertTrackToPlaylist(track: Track, playlistId: Long) {
+        database.insertTrack(track.copy(playlistId = playlistId.toInt()))
+    }
+
+    override suspend fun deleteTrackFromPlaylist(track: Track) {
+        database.insertTrack(track.copy(playlistId = null))
+    }
+
+    override suspend fun updateTrackFavoriteStatus(track: Track, isFavorite: Boolean) {
+        database.insertTrack(track.copy(isFavorite = isFavorite))
+    }
+
+    override suspend fun deleteTracksByPlaylistId(playlistId: Long) {
+        database.deleteTracksByPlaylistId(playlistId)
+    }
+
+    override fun getFavoriteTracks(): Flow<List<Track>> {
+        return database.getFavoriteTracks()
     }
 }
