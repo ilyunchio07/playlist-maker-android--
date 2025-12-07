@@ -3,8 +3,10 @@ package com.example.playlistmaker.ui.activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +28,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
@@ -91,13 +96,6 @@ fun SearchScreen(
     var isFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    LaunchedEffect(Unit) {
-    }
-
-    LaunchedEffect(searchText) {
-        viewModel.updateQuery(searchText)
-    }
-
     LaunchedEffect(screenState) {
         if (screenState is SearchState.Content) {
             focusManager.clearFocus()
@@ -133,7 +131,10 @@ fun SearchScreen(
 
             BasicTextField(
                 value = searchText,
-                onValueChange = { searchText = it },
+                onValueChange = {
+                    searchText = it
+                    viewModel.updateQuery(it)
+                },
                 textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
                 singleLine = true,
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -154,7 +155,9 @@ fun SearchScreen(
                             imageVector = Icons.Default.Search,
                             contentDescription = stringResource(R.string.search),
                             tint = YP_TEXT_GRAY,
-                            modifier = Modifier.size(16.dp).clickable { viewModel.updateQuery(searchText) }
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clickable { viewModel.updateQuery(searchText) }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Box(modifier = Modifier.weight(1f)) {
@@ -171,7 +174,13 @@ fun SearchScreen(
                                 imageVector = Icons.Default.Clear,
                                 contentDescription = stringResource(R.string.clear_search),
                                 tint = YP_TEXT_GRAY,
-                                modifier = Modifier.size(16.dp).clickable { searchText = "" }
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clickable {
+                                        searchText = ""
+                                        viewModel.updateQuery("")
+                                        focusManager.clearFocus()
+                                    }
                             )
                         }
                     }
@@ -184,6 +193,7 @@ fun SearchScreen(
                         historyList = history.map { it.word },
                         onClick = { word ->
                             searchText = word
+                            viewModel.updateQuery(word) // Сразу ищем
                             focusManager.clearFocus()
                         }
                     )
@@ -209,19 +219,50 @@ fun SearchScreen(
                             }
                         }
                         is SearchState.Empty -> {
-                            Text(
-                                text = stringResource(R.string.nothing_found),
+                            Column(
                                 modifier = Modifier.align(Alignment.Center),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_nothing_found),
+                                    contentDescription = stringResource(R.string.nothing_found),
+                                    modifier = Modifier.size(120.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.nothing_found),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
                         }
                         is SearchState.Error -> {
-                            Text(
-                                text = stringResource(R.string.connection_error),
+                            Column(
                                 modifier = Modifier.align(Alignment.Center),
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
-                            )
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.ic_connection_error),
+                                    contentDescription = stringResource(R.string.connection_error),
+                                    modifier = Modifier.size(120.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = stringResource(R.string.connection_error),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Button(
+                                    onClick = { viewModel.refreshSearch() }, // ВЫЗЫВАЕМ REFRESH
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary
+                                    )
+                                ) {
+                                    Text(text = stringResource(R.string.refresh))
+                                }
+                            }
                         }
                         is SearchState.Initial -> { }
                     }

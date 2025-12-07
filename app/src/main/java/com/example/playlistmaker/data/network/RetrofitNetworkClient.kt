@@ -1,17 +1,31 @@
 package com.example.playlistmaker.data.network
 
-import com.example.playlistmaker.creator.Storage
 import com.example.playlistmaker.data.dto.BaseResponse
 import com.example.playlistmaker.data.dto.TracksSearchRequest
-import com.example.playlistmaker.data.dto.TracksSearchResponse
-import com.example.playlistmaker.data.network.NetworkClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
-class RetrofitNetworkClient(private val storage: Storage) : NetworkClient {
+class RetrofitNetworkClient : NetworkClient {
+
+    private val imdbBaseUrl = "https://itunes.apple.com"
+
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(imdbBaseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    private val iTunesService = retrofit.create(ITunesApi::class.java)
 
     override fun doRequest(dto: Any): BaseResponse {
         if (dto is TracksSearchRequest) {
-            val result = storage.search(dto.expression)
-            return TracksSearchResponse(result).apply { resultCode = 200 }
+            return try {
+                val resp = iTunesService.search(dto.expression).execute()
+                val body = resp.body() ?: return BaseResponse().apply { resultCode = resp.code() }
+
+                body.apply { resultCode = resp.code() }
+            } catch (e: Exception) {
+                BaseResponse().apply { resultCode = 400 }
+            }
         } else {
             return BaseResponse().apply { resultCode = 400 }
         }

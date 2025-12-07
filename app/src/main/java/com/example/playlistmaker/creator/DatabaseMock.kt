@@ -1,5 +1,6 @@
 package com.example.playlistmaker.creator
 
+import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.models.Playlist
 import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.domain.models.Word
@@ -42,8 +43,18 @@ class DatabaseMock(private val scope: CoroutineScope) {
     )
 
     private val playlists = mutableListOf<Playlist>(
-        Playlist(1L, "Любимое", "Мои самые любимые треки"),
-        Playlist(2L, "Для тренировок", "Энергичная музыка")
+        Playlist(
+            id = 1L,
+            name = "Любимое",
+            description = "Мои самые любимые треки",
+            coverImageResId = R.drawable.ic_playlist_favorite
+        ),
+        Playlist(
+            id = 2L,
+            name = "Для тренировок",
+            description = "Энергичная музыка",
+            coverImageResId = R.drawable.ic_playlist_workout
+        )
     )
 
     private val _dataUpdates = MutableSharedFlow<Unit>()
@@ -85,8 +96,23 @@ class DatabaseMock(private val scope: CoroutineScope) {
     }
 
     fun getPlaylist(id: Long): Flow<Playlist?> = flow {
-        emit(playlists.find { it.id == id })
-        _dataUpdates.collect { emit(playlists.find { it.id == id }) }
+        val playlist = playlists.find { it.id == id }
+        if (playlist != null) {
+            val playlistTracks = tracks.filter { it.playlistId?.toLong() == id }
+            emit(playlist.copy(tracks = playlistTracks))
+        } else {
+            emit(null)
+        }
+
+        _dataUpdates.collect {
+            val updatedPlaylist = playlists.find { it.id == id }
+            if (updatedPlaylist != null) {
+                val tracks = tracks.filter { it.playlistId?.toLong() == id }
+                emit(updatedPlaylist.copy(tracks = tracks))
+            } else {
+                emit(null)
+            }
+        }
     }
 
     fun getAllPlaylists(): Flow<List<Playlist>> = flow {
@@ -94,9 +120,16 @@ class DatabaseMock(private val scope: CoroutineScope) {
         _dataUpdates.collect { emit(getPlaylistsWithTracks()) }
     }
 
-    fun addNewPlaylist(name: String, description: String) {
+    fun addNewPlaylist(name: String, description: String, coverImageUri: String?) {
         val newId = (playlists.maxOfOrNull { it.id } ?: 0) + 1
-        playlists.add(Playlist(newId, name, description))
+        playlists.add(
+            Playlist(
+                id = newId,
+                name = name,
+                description = description,
+                coverImageUrl = coverImageUri // Исправлено имя параметра на coverImageUrl
+            )
+        )
         notifyDataChanged()
     }
 
@@ -124,4 +157,11 @@ class DatabaseMock(private val scope: CoroutineScope) {
     private fun notifyDataChanged() {
         scope.launch(Dispatchers.IO) { _dataUpdates.emit(Unit) }
     }
+
+    fun clearHistory() {
+        historyList.clear()
+        scope.launch(Dispatchers.IO) { _historyUpdates.emit(Unit) }
+    }
+
+
 }

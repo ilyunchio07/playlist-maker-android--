@@ -1,16 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Playlist maker</string>
+    <string name="app_name">Playlist Maker</string>
 
     <string name="search">Поиск</string>
+    <string name="media_library">Медиатека</string>
     <string name="playlists">Плейлисты</string>
     <string name="favorites">Избранное</string>
     <string name="settings">Настройки</string>
 
-    <string name="toast_message_search">Нажата кнопка "Поиск"</string>
-    <string name="toast_message_playlists">Нажата кнопка "Плейлисты"</string>
-    <string name="toast_message_favorites">Нажата кнопка "Избранное"</string>
-    <string name="toast_message_settings">Нажата кнопка "Настройки"</string>
+    <string name="back_button">Назад</string>
+    <string name="track_cover_description">Обложка трека</string>
 
+    <string name="clear_search">Очистить поисковый запрос</string>
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="connection_error">Проблемы со связью</string>
+    <string name="connection_error_desc">Загрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="refresh">Обновить</string>
+    <string name="history_search">Вы искали</string>
+    <string name="clear_history">Очистить историю</string>
 
     <string name="settings_dark_theme">Темная тема</string>
     <string name="settings_share">Поделиться приложением</string>
@@ -18,14 +25,26 @@
     <string name="settings_agreement">Пользовательское соглашение</string>
 
     <string name="share_app_link">https://practicum.yandex.ru/android-developer/</string>
-    <string name="support_email">ilaaleksandrov08@gmail.com</string> <string name="support_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
+    <string name="support_email">student@example.com</string>
+    <string name="support_subject">Сообщение разработчикам и разработчицам приложения Playlist Maker</string>
     <string name="support_message">Спасибо разработчикам и разработчицам за крутое приложение!</string>
-
     <string name="offer_link">https://yandex.ru/legal/practicum_offer/</string>
 
-    <string name="nothing_found">Ничего не найдено</string>
-    <string name="connection_error">Проблемы со связью\n\nЗагрузка не удалась</string>
-    <string name="clear_search">Очистить поисковый запрос</string>
-    <string name="back_button">Назад</string>
-    <string name="track_cover_description">Track cover</string>
+    <string name="play">Воспроизвести</string>
+    <string name="pause">Пауза</string>
+    <string name="add_to_playlist">Добавить в плейлист</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="time_start">00:00</string>
+    <string name="duration">Продолжительность</string>
+    <string name="album">Альбом</string>
+    <string name="year">Год</string>
+    <string name="genre">Жанр</string>
+    <string name="country">Страна</string>
+
+    <string name="new_playlist">Новый плейлист</string>
+    <string name="create_playlist">Создать плейлист</string>
+    <string name="playlist_name">Название*</string>
+    <string name="playlist_description">Описание</string>
+    <string name="playlist_created_successfully">Плейлист создан</string>
+
 </resources>

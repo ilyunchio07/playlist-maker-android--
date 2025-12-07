@@ -3,26 +3,29 @@ package com.example.playlistmaker.data.network
 import com.example.playlistmaker.creator.DatabaseMock
 import com.example.playlistmaker.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.domain.models.Word
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.map
 
-class SearchHistoryRepositoryImpl(scope: CoroutineScope) : SearchHistoryRepository {
+class SearchHistoryRepositoryImpl(
+    private val database: DatabaseMock // Принимаем базу
+) : SearchHistoryRepository {
 
-    private val dbMock = DatabaseMock(scope)
-
-    override fun getHistoryRequests(): Flow<List<Word>> = flow {
-        emit(dbMock.getHistoryRequests())
-
-        dbMock.historyUpdates.collect {
-            emit(dbMock.getHistoryRequests())
+    override fun getHistoryRequests(): Flow<List<Word>> {
+        // Превращаем SharedFlow<Unit> в Flow<List<Word>>
+        // Сначала эмитим текущее состояние, потом слушаем обновления
+        return kotlinx.coroutines.flow.flow {
+            emit(database.getHistoryRequests())
+            database.historyUpdates.collect {
+                emit(database.getHistoryRequests())
+            }
         }
-    }.flowOn(Dispatchers.IO)
+    }
 
-    override suspend fun addToHistory(word: Word) = withContext(Dispatchers.IO) {
-        dbMock.addToHistory(word)
+    override suspend fun addToHistory(word: Word) {
+        database.addToHistory(word)
+    }
+
+    override suspend fun clearHistory() {
+        database.clearHistory()
     }
 }
