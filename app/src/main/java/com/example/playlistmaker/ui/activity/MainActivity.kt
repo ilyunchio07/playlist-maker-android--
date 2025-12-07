@@ -79,7 +79,6 @@ fun PlaylistHost(navController: NavHostController) {
             SearchScreen(
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    // Сериализуем трек в Json для передачи
                     val json = Uri.encode(gson.toJson(track))
                     navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
                 }
@@ -94,7 +93,7 @@ fun PlaylistHost(navController: NavHostController) {
             MediaLibraryScreen(
                 onBackClick = { navController.popBackStack() },
                 onPlaylistClick = { playlistId ->
-                    Toast.makeText(context, "Плейлист ID: $playlistId", Toast.LENGTH_SHORT).show()
+                    navController.navigate("${Screen.PLAYLIST_DETAILS.route}/$playlistId")
                 },
                 onNewPlaylistClick = {
                     navController.navigate(Screen.NEW_PLAYLIST.route)
@@ -126,8 +125,22 @@ fun PlaylistHost(navController: NavHostController) {
 
             TrackDetailsScreen(
                 track = track,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(
+            route = "${Screen.PLAYLIST_DETAILS.route}/{playlistId}",
+            arguments = listOf(navArgument("playlistId") { type = NavType.LongType })
+        ) { backStackEntry ->
+            val playlistId = backStackEntry.arguments?.getLong("playlistId") ?: 0L
+
+            PlaylistScreen(
+                playlistId = playlistId,
                 onBackClick = { navController.popBackStack() },
-                onNewPlaylistClick = { navController.navigate(Screen.NEW_PLAYLIST.route) }
+                onTrackClick = { track ->
+                    val json = Uri.encode(Gson().toJson(track))
+                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                }
             )
         }
     }
@@ -243,3 +256,4 @@ fun MainMenuItem(
         )
     }
 }
+

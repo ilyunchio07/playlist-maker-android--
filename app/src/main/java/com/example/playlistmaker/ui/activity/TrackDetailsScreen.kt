@@ -49,7 +49,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,7 +70,6 @@ import java.util.Locale
 fun TrackDetailsScreen(
     track: Track,
     onBackClick: () -> Unit,
-    onNewPlaylistClick: () -> Unit,
     viewModel: TrackDetailsViewModel = viewModel(factory = TrackDetailsViewModel.Factory)
 ) {
     val isFavorite by viewModel.isFavorite.collectAsState()
@@ -201,27 +199,20 @@ fun TrackDetailsScreen(
                             .padding(bottom = 24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .width(32.dp)
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(YP_TEXT_GRAY)
+                        )
+
                         Text(
                             text = "Добавить в плейлист",
                             style = TextStyle(fontSize = 19.sp, fontWeight = FontWeight.Medium),
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(vertical = 24.dp)
                         )
-
-                        Button(
-                            onClick = {
-                                showBottomSheet = false
-                                onNewPlaylistClick()
-                            },
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .height(36.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text("Новый плейлист", fontSize = 14.sp)
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
                         LazyColumn {
                             items(playlists) { playlist ->
                                 PlaylistBottomSheetItem(
@@ -249,9 +240,15 @@ fun PlaylistBottomSheetItem(playlist: Playlist, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_music),
-            contentDescription = null,
+        // ИСПОЛЬЗУЕМ AsyncImage ДЛЯ ОТОБРАЖЕНИЯ ОБЛОЖКИ ПЛЕЙЛИСТА
+        val imageModel = playlist.coverImageUrl ?: playlist.coverImageResId
+        AsyncImage(
+            model = imageModel,
+            contentDescription = playlist.name,
+            // Заглушка на случай, если обложки нет
+            placeholder = painterResource(id = R.drawable.ic_music),
+            error = painterResource(id = R.drawable.ic_music),
+            fallback = painterResource(id = R.drawable.ic_music),
             modifier = Modifier
                 .size(45.dp)
                 .clip(RoundedCornerShape(4.dp))
@@ -268,8 +265,10 @@ fun PlaylistBottomSheetItem(playlist: Playlist, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+
+            val tracksCount = playlist.tracks.size
             Text(
-                text = "${playlist.tracks.size} треков",
+                text = "$tracksCount треков",
                 style = TextStyle(fontSize = 11.sp, color = YP_TEXT_GRAY)
             )
         }

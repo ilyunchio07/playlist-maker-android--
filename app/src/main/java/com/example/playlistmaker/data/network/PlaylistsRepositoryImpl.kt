@@ -17,8 +17,8 @@ class PlaylistsRepositoryImpl(
         return database.getAllPlaylists()
     }
 
-    override suspend fun addNewPlaylist(name: String, description: String) {
-        database.addNewPlaylist(name = name, description = description)
+    override suspend fun addNewPlaylist(name: String, description: String, coverImageUri: String?) {
+        database.addNewPlaylist(name = name, description = description, coverImageUri = coverImageUri)
     }
 
     override suspend fun deletePlaylistById(id: Long) {

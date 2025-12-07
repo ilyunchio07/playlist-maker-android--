@@ -110,7 +110,7 @@ fun NewPlaylistScreen(
                     .background(Color(0xFFE6E8EB), RoundedCornerShape(8.dp))
                     .clip(RoundedCornerShape(8.dp))
                     .clickable {
-                        // Запуск выбора фото
+
                         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                 contentAlignment = Alignment.Center
@@ -123,7 +123,7 @@ fun NewPlaylistScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-                    // Плейсхолдер
+
                     Image(
                         painter = painterResource(id = R.drawable.ic_music),
                         contentDescription = "Добавить обложку",
@@ -175,7 +175,7 @@ fun NewPlaylistScreen(
             Button(
                 onClick = {
                     if (name.isNotEmpty()) {
-                        viewModel.createNewPlaylist(name, description)
+                        viewModel.createNewPlaylist(name, description, coverUri?.toString())
                         onBackClick()
                     }
                 },

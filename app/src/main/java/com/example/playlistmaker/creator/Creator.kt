@@ -18,11 +18,12 @@ object Creator {
         return TracksRepositoryImpl(databaseMock)
     }
 
-    fun provideSearchHistoryRepository(): SearchHistoryRepository {
-        return SearchHistoryRepositoryImpl(applicationScope)
-    }
 
     fun providePlaylistsRepository(): PlaylistsRepository {
         return PlaylistsRepositoryImpl(databaseMock)
+    }
+
+    fun provideSearchHistoryRepository(): SearchHistoryRepository {
+        return SearchHistoryRepositoryImpl(databaseMock)
     }
 }

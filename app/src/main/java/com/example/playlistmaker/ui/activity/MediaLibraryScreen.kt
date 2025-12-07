@@ -48,8 +48,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.models.Playlist
+import com.example.playlistmaker.ui.theme.YP_LIGHT_GRAY
 import com.example.playlistmaker.ui.theme.YP_TEXT_GRAY
 import com.example.playlistmaker.ui.view_model.PlaylistsViewModel
 
@@ -145,13 +147,18 @@ fun PlaylistGridItem(playlist: Playlist, onClick: () -> Unit) {
             .clickable(onClick = onClick)
             .fillMaxWidth()
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_music),
-            contentDescription = null,
+        val imageModel = playlist.coverImageUrl ?: playlist.coverImageResId
+
+        AsyncImage(
+            model = imageModel,
+            contentDescription = playlist.name,
+            placeholder = painterResource(id = R.drawable.ic_music),
+            error = painterResource(id = R.drawable.ic_music),
+            fallback = painterResource(id = R.drawable.ic_music),
             modifier = Modifier
                 .aspectRatio(1f)
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFFE6E8EB)),
+                .background(YP_LIGHT_GRAY),
             contentScale = ContentScale.Crop
         )
 

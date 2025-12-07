@@ -1,7 +1,6 @@
 package com.example.playlistmaker.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.ui.theme.YP_TEXT_GRAY
@@ -35,7 +38,8 @@ import java.util.Locale
 fun TrackListItem(
     track: Track,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
+    showArrow: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -47,9 +51,11 @@ fun TrackListItem(
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_music),
+        AsyncImage(
+            model = track.artworkUrl100,
             contentDescription = stringResource(R.string.track_cover_description),
+            placeholder = painterResource(id = R.drawable.ic_music),
+            error = painterResource(id = R.drawable.ic_music),
             modifier = Modifier
                 .size(45.dp)
                 .clip(RoundedCornerShape(2.dp)),
@@ -77,6 +83,14 @@ fun TrackListItem(
                 color = YP_TEXT_GRAY,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
+            )
+        }
+
+        if (showArrow) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = YP_TEXT_GRAY
             )
         }
     }
