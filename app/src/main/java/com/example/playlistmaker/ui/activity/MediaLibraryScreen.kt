@@ -171,7 +171,7 @@ fun PlaylistGridItem(playlist: Playlist, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis
         )
 
-        val tracksCount = playlist.tracks.size
+        val tracksCount = playlist.tracksCount
         Text(
             text = "$tracksCount треков",
             style = TextStyle(fontSize = 12.sp, color = YP_TEXT_GRAY),

@@ -126,7 +126,7 @@ fun PlaylistScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        val tracksCount = currentPlaylist.tracks.size
+                        val tracksCount = currentPlaylist.tracksCount
                         Text(
                             text = "$tracksCount треков",
                             fontSize = 18.sp,

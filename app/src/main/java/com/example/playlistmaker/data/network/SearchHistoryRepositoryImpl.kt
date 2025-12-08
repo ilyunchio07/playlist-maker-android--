@@ -1,31 +1,24 @@
 package com.example.playlistmaker.data.network
 
-import com.example.playlistmaker.creator.DatabaseMock
+import com.example.playlistmaker.data.storage.SearchHistoryPreferences
 import com.example.playlistmaker.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.domain.models.Word
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 
 class SearchHistoryRepositoryImpl(
-    private val database: DatabaseMock // Принимаем базу
+    private val historyPreferences: SearchHistoryPreferences
 ) : SearchHistoryRepository {
 
-    override fun getHistoryRequests(): Flow<List<Word>> {
-        // Превращаем SharedFlow<Unit> в Flow<List<Word>>
-        // Сначала эмитим текущее состояние, потом слушаем обновления
-        return kotlinx.coroutines.flow.flow {
-            emit(database.getHistoryRequests())
-            database.historyUpdates.collect {
-                emit(database.getHistoryRequests())
-            }
-        }
+    override fun getHistoryRequests(): Flow<List<Word>> = flow {
+        emit(historyPreferences.getHistory())
     }
 
     override suspend fun addToHistory(word: Word) {
-        database.addToHistory(word)
+        historyPreferences.addEntry(word)
     }
 
     override suspend fun clearHistory() {
-        database.clearHistory()
+        historyPreferences.clear()
     }
 }
