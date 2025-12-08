@@ -38,7 +38,6 @@ class SearchViewModel(
 
     private fun loadHistory() {
         viewModelScope.launch {
-            // ИСПРАВЛЕНИЕ 1: Подписываемся на Flow
             searchHistoryRepository.getHistoryRequests().collect { history ->
                 _historyList.value = history
             }
@@ -47,7 +46,6 @@ class SearchViewModel(
 
     fun clearHistory() {
         viewModelScope.launch {
-            // ИСПРАВЛЕНИЕ 2: Вызываем метод очистки (его нужно добавить в репозиторий)
             searchHistoryRepository.clearHistory()
             _historyList.value = emptyList()
         }

@@ -25,10 +25,14 @@ class TrackDetailsViewModel(
     private val _isFavorite = MutableStateFlow(false)
     val isFavorite: StateFlow<Boolean> = _isFavorite.asStateFlow()
 
-    val playlists: Flow<List<Playlist>> = playlistsRepository.getAllPlaylists()
+    val playlists: Flow<List<Playlist>> = playlistsRepository.getPlaylists()
 
     fun checkFavoriteStatus(track: Track) {
         _isFavorite.value = track.isFavorite
+        viewModelScope.launch(Dispatchers.IO) {
+            val isActualFavorite = tracksRepository.isTrackFavorite(track.trackId)
+            _isFavorite.value = isActualFavorite
+        }
     }
 
     fun onFavoriteClicked(track: Track) {
@@ -41,7 +45,7 @@ class TrackDetailsViewModel(
 
     fun addTrackToPlaylist(track: Track, playlist: Playlist) {
         viewModelScope.launch(Dispatchers.IO) {
-            tracksRepository.insertTrackToPlaylist(track, playlist.id)
+            playlistsRepository.addTrackToPlaylist(track, playlist)
         }
     }
 

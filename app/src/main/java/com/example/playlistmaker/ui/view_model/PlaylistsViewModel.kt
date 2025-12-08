@@ -7,64 +7,39 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.domain.api.PlaylistsRepository
-import com.example.playlistmaker.domain.api.TracksRepository
 import com.example.playlistmaker.domain.models.Playlist
-import com.example.playlistmaker.domain.models.Track
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class PlaylistsViewModel(
-    private val playlistsRepository: PlaylistsRepository,
-    private val tracksRepository: TracksRepository
+    private val playlistsRepository: PlaylistsRepository
 ) : ViewModel() {
 
-    val playlists: Flow<List<Playlist>> = playlistsRepository.getAllPlaylists()
+    // ИСПРАВЛЕНИЕ 1: Было getAllPlaylists(), стало getPlaylists()
+    val playlists: Flow<List<Playlist>> = playlistsRepository.getPlaylists()
 
-    val favoriteList: Flow<List<Track>> = tracksRepository.getFavoriteTracks()
-
+    // ИСПРАВЛЕНИЕ 2: Было addNewPlaylist, стало createPlaylist
     fun createNewPlaylist(name: String, description: String, coverImageUri: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            playlistsRepository.addNewPlaylist(name, description, coverImageUri)
+            playlistsRepository.createPlaylist(name, description, coverImageUri)
         }
     }
 
-    fun insertTrackToPlaylist(track: Track, playlistId: Long) {
+    // ИСПРАВЛЕНИЕ 3: Было deletePlaylistById, стало deletePlaylist
+    // (Если вы не используете удаление в UI, этот метод можно вообще убрать,
+    // но чтобы починить ошибку, вот правильный вызов):
+    fun deletePlaylist(playlistId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
-            tracksRepository.insertTrackToPlaylist(track, playlistId)
+            playlistsRepository.deletePlaylist(playlistId)
         }
-    }
-
-    fun toggleFavorite(track: Track) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tracksRepository.updateTrackFavoriteStatus(track, !track.isFavorite)
-        }
-    }
-
-    fun deleteTrackFromPlaylist(track: Track) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tracksRepository.deleteTrackFromPlaylist(track)
-        }
-    }
-
-    fun deletePlaylistById(id: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            tracksRepository.deleteTracksByPlaylistId(id)
-            playlistsRepository.deletePlaylistById(id)
-        }
-    }
-
-    suspend fun isTrackExist(track: Track): Boolean {
-        return tracksRepository.getTrackByNameAndArtist(track).firstOrNull() != null
     }
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 PlaylistsViewModel(
-                    playlistsRepository = Creator.providePlaylistsRepository(),
-                    tracksRepository = Creator.provideTracksRepository()
+                    playlistsRepository = Creator.providePlaylistsRepository()
                 )
             }
         }
