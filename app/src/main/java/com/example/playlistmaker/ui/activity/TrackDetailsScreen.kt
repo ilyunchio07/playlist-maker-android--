@@ -191,7 +191,8 @@ fun TrackDetailsScreen(
                 ModalBottomSheet(
                     onDismissRequest = { showBottomSheet = false },
                     sheetState = sheetState,
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    dragHandle = null
                 ) {
                     Column(
                         modifier = Modifier
@@ -240,12 +241,10 @@ fun PlaylistBottomSheetItem(playlist: Playlist, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ИСПОЛЬЗУЕМ AsyncImage ДЛЯ ОТОБРАЖЕНИЯ ОБЛОЖКИ ПЛЕЙЛИСТА
         val imageModel = playlist.coverImageUrl ?: playlist.coverImageResId
         AsyncImage(
             model = imageModel,
             contentDescription = playlist.name,
-            // Заглушка на случай, если обложки нет
             placeholder = painterResource(id = R.drawable.ic_music),
             error = painterResource(id = R.drawable.ic_music),
             fallback = painterResource(id = R.drawable.ic_music),
@@ -266,9 +265,8 @@ fun PlaylistBottomSheetItem(playlist: Playlist, onClick: () -> Unit) {
                 overflow = TextOverflow.Ellipsis
             )
 
-            val tracksCount = playlist.tracks.size
             Text(
-                text = "$tracksCount треков",
+                text = "${playlist.tracksCount} треков",
                 style = TextStyle(fontSize = 11.sp, color = YP_TEXT_GRAY)
             )
         }

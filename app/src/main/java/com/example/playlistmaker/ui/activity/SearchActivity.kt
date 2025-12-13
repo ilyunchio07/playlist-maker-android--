@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,11 +30,13 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -90,11 +91,12 @@ fun SearchScreen(
     onTrackClick: (Track) -> Unit,
     viewModel: SearchViewModel = viewModel(factory = SearchViewModel.Factory)
 ) {
-    val screenState by viewModel.searchScreenState.collectAsState()
+    val screenState by viewModel.state.collectAsState()
     val history by viewModel.historyList.collectAsState()
     var searchText by remember { mutableStateOf("") }
     var isFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val showHistory = isFocused && searchText.isEmpty() && history.isNotEmpty()
 
     LaunchedEffect(screenState) {
         if (screenState is SearchState.Content) {
@@ -128,76 +130,100 @@ fun SearchScreen(
                 .padding(paddingValues)
                 .padding(top = 8.dp)
         ) {
-
-            BasicTextField(
-                value = searchText,
-                onValueChange = {
-                    searchText = it
-                    viewModel.updateQuery(it)
-                },
-                textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
-                singleLine = true,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.updateQuery(searchText) }),
-                modifier = Modifier.onFocusChanged { isFocused = it.isFocused },
-                decorationBox = { innerTextField ->
-                    Row(
+            Surface(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
+                shape = RoundedCornerShape(10.dp),
+                color = YP_LIGHT_GRAY
+            ) {
+                Column {
+                    BasicTextField(
+                        value = searchText,
+                        onValueChange = {
+                            searchText = it
+                            viewModel.updateQuery(it)
+                        },
+                        textStyle = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface),
+                        singleLine = true,
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = {
+                            viewModel.updateQuery(searchText, immediate = true)
+                            focusManager.clearFocus()
+                        }),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .height(36.dp)
-                            .background(YP_LIGHT_GRAY, RoundedCornerShape(8.dp))
-                            .padding(horizontal = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = stringResource(R.string.search),
-                            tint = YP_TEXT_GRAY,
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clickable { viewModel.updateQuery(searchText) }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (searchText.isEmpty()) {
-                                Text(
-                                    text = stringResource(id = R.string.search),
-                                    style = TextStyle(fontSize = 16.sp, color = YP_TEXT_GRAY)
+                            .onFocusChanged { isFocused = it.isFocused }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        decorationBox = { innerTextField ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = stringResource(R.string.search),
+                                    tint = YP_TEXT_GRAY,
+                                    modifier = Modifier
+                                        .size(16.dp)
+                                        .clickable {
+                                            viewModel.updateQuery(searchText, immediate = true)
+                                            focusManager.clearFocus()
+                                        }
                                 )
-                            }
-                            innerTextField()
-                        }
-                        if (searchText.isNotEmpty()) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = stringResource(R.string.clear_search),
-                                tint = YP_TEXT_GRAY,
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clickable {
-                                        searchText = ""
-                                        viewModel.updateQuery("")
-                                        focusManager.clearFocus()
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Box(modifier = Modifier.weight(1f)) {
+                                    if (searchText.isEmpty()) {
+                                        Text(
+                                            text = stringResource(id = R.string.search),
+                                            style = TextStyle(fontSize = 16.sp, color = YP_TEXT_GRAY)
+                                        )
                                     }
-                            )
-                        }
-                    }
-                }
-            )
-
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (isFocused && searchText.isEmpty() && history.isNotEmpty()) {
-                    HistoryRequests(
-                        historyList = history.map { it.word },
-                        onClick = { word ->
-                            searchText = word
-                            viewModel.updateQuery(word) // Сразу ищем
-                            focusManager.clearFocus()
+                                    innerTextField()
+                                }
+                                if (searchText.isNotEmpty()) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = stringResource(R.string.clear_search),
+                                        tint = YP_TEXT_GRAY,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .clickable {
+                                                searchText = ""
+                                                viewModel.updateQuery("")
+                                                focusManager.clearFocus()
+                                            }
+                                    )
+                                }
+                            }
                         }
                     )
-                } else {
+
+                    if (showHistory) {
+                        Divider(color = YP_TEXT_GRAY.copy(alpha = 0.2f), thickness = 1.dp)
+                        HistoryRequests(
+                            historyList = history.map { it.word },
+                            onClick = { word ->
+                                searchText = word
+                                viewModel.updateQuery(word)
+                                focusManager.clearFocus()
+                            },
+                            onClearHistoryClick = {
+                                viewModel.clearHistory()
+                            },
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 16.dp)
+            ) {
+                if (!showHistory) {
                     when (val state = screenState) {
                         is SearchState.Loading -> {
                             CircularProgressIndicator(
@@ -255,7 +281,7 @@ fun SearchScreen(
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Button(
-                                    onClick = { viewModel.refreshSearch() }, // ВЫЗЫВАЕМ REFRESH
+                                    onClick = { viewModel.refreshSearch() },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.primary
                                     )
@@ -265,6 +291,7 @@ fun SearchScreen(
                             }
                         }
                         is SearchState.Initial -> { }
+                        else -> { }
                     }
                 }
             }

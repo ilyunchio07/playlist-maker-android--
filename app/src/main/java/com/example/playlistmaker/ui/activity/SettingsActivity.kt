@@ -23,14 +23,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -41,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.playlistmaker.R
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
-import com.example.playlistmaker.ui.theme.YP_LIGHT_GRAY
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,7 +53,6 @@ class SettingsActivity : ComponentActivity() {
 @Composable
 fun SettingsScreen(onBackClick: () -> Unit) {
     val context = LocalContext.current
-    val isDarkTheme = remember { mutableStateOf(false) }
 
     val shareLink = stringResource(id = R.string.share_app_link)
     val supportEmail = stringResource(id = R.string.support_email)
@@ -91,30 +85,6 @@ fun SettingsScreen(onBackClick: () -> Unit) {
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = stringResource(id = R.string.settings_dark_theme),
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colorScheme.onSurface)
-                )
-                Switch(
-                    checked = isDarkTheme.value,
-                    onCheckedChange = { isDarkTheme.value = it },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        checkedTrackColor = YP_LIGHT_GRAY.copy(alpha = 0.5f),
-                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        uncheckedTrackColor = YP_LIGHT_GRAY
-                    )
-                )
-            }
-
             SettingsItem(
                 text = stringResource(id = R.string.settings_share),
                 icon = Icons.Default.Share,

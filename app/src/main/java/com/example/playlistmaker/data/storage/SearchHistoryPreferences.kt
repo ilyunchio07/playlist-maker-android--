@@ -1,58 +1,64 @@
 package com.example.playlistmaker.data.storage
 
-import android.content.Context
-import android.content.SharedPreferences
-import com.example.playlistmaker.domain.models.Word
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 
-class SearchHistoryPreferences(context: Context) {
+class SearchHistoryPreferences(
+    private val dataStore: DataStore<Preferences>
+) {
+    private val PREFERENCES_KEY = stringPreferencesKey("search_history_key")
+    private val MAX_ENTRIES = 10
+    private val SEPARATOR = ","
 
-    private val sharedPreferences: SharedPreferences =
-        context.getSharedPreferences(HISTORY_PREFS, Context.MODE_PRIVATE)
-    private val gson = Gson()
-    private val key = "history_list"
-
-    fun getHistory(): List<Word> {
-        val json = sharedPreferences.getString(key, null)
-        return if (json != null) {
-            val type = object : TypeToken<List<Word>>() {}.type
-            gson.fromJson(json, type)
-        } else {
+    val historyFlow: Flow<List<String>> = dataStore.data.map { preferences ->
+        val historyString = preferences[PREFERENCES_KEY].orEmpty()
+        if (historyString.isEmpty()) {
             emptyList()
+        } else {
+            historyString.split(SEPARATOR)
         }
     }
 
-    fun addEntry(word: Word) {
-        val currentHistory = getHistory().toMutableList()
+    suspend fun addEntry(word: String) {
+        if (word.isEmpty()) return
 
-        currentHistory.removeAll { it.word == word.word }
+        dataStore.edit { preferences ->
+            val historyString = preferences[PREFERENCES_KEY].orEmpty()
+            val history = if (historyString.isNotEmpty()) {
+                historyString.split(SEPARATOR).toMutableList()
+            } else {
+                mutableListOf()
+            }
 
-        currentHistory.add(0, word)
+            history.remove(word)
+            history.add(0, word)
 
-        if (currentHistory.size > MAX_HISTORY_SIZE) {
+            val subList = if (history.size > MAX_ENTRIES) history.subList(0, MAX_ENTRIES) else history
 
-            val trimmedList = currentHistory.subList(0, MAX_HISTORY_SIZE)
-            currentHistory.clear()
-            currentHistory.addAll(trimmedList)
+            val updatedString = subList.joinToString(SEPARATOR)
+            preferences[PREFERENCES_KEY] = updatedString
         }
-
-        saveList(currentHistory)
     }
 
-    fun clear() {
-        sharedPreferences.edit().remove(key).apply()
+    suspend fun getEntries(): List<String> {
+        return dataStore.data.map { preferences ->
+            val historyString = preferences[PREFERENCES_KEY].orEmpty()
+            if (historyString.isEmpty()) {
+                emptyList()
+            } else {
+                historyString.split(SEPARATOR)
+            }
+        }.first()
     }
 
-    private fun saveList(history: List<Word>) {
-        val json = gson.toJson(history)
-        sharedPreferences.edit()
-            .putString(key, json)
-            .apply()
-    }
-
-    companion object {
-        private const val HISTORY_PREFS = "playlist_maker_history"
-        private const val MAX_HISTORY_SIZE = 10
+    suspend fun clear() {
+        dataStore.edit { preferences ->
+            preferences.remove(PREFERENCES_KEY)
+        }
     }
 }

@@ -1,8 +1,7 @@
 package com.example.playlistmaker.ui.activity
 
-import android.net.Uri
+import android.app.Application
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -32,10 +31,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -46,7 +45,6 @@ import com.example.playlistmaker.R
 import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.ui.Screen
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
-import com.google.gson.Gson
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,10 +60,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PlaylistHost(navController: NavHostController) {
-    val context = LocalContext.current
-    val gson = Gson()
-
     NavHost(navController = navController, startDestination = Screen.MAIN.route) {
+
         composable(Screen.MAIN.route) {
             MainScreen(
                 onSearchClick = { navController.navigate(Screen.SEARCH.route) },
@@ -79,8 +75,8 @@ fun PlaylistHost(navController: NavHostController) {
             SearchScreen(
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    val json = Uri.encode(gson.toJson(track))
-                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
         }
@@ -95,51 +91,46 @@ fun PlaylistHost(navController: NavHostController) {
                 onPlaylistClick = { playlistId ->
                     navController.navigate("${Screen.PLAYLIST_DETAILS.route}/$playlistId")
                 },
-                onNewPlaylistClick = {
-                    navController.navigate(Screen.NEW_PLAYLIST.route)
-                }
+                onNewPlaylistClick = { navController.navigate(Screen.NEW_PLAYLIST.route) },
+                onFavoritesClick = { navController.navigate(Screen.FAVORITES.route) }
             )
         }
 
         composable(Screen.NEW_PLAYLIST.route) {
-            NewPlaylistScreen(
-                onBackClick = { navController.popBackStack() }
-            )
+            NewPlaylistScreen(onBackClick = { navController.popBackStack() })
         }
 
         composable(Screen.FAVORITES.route) {
             FavoritesScreen(
+                onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    val json = Uri.encode(Gson().toJson(track))
-                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
         }
 
-        composable(
-            route = "${Screen.TRACK_DETAILS.route}/{trackJson}",
-            arguments = listOf(navArgument("trackJson") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val json = backStackEntry.arguments?.getString("trackJson")
-            val track = gson.fromJson(json, Track::class.java)
-
-            TrackDetailsScreen(
-                track = track,
-                onBackClick = { navController.popBackStack() }
-            )
+        composable(Screen.TRACK_DETAILS.route) {
+            val track = navController.previousBackStackEntry?.savedStateHandle?.get<Track>("track")
+            if (track != null) {
+                TrackDetailsScreen(
+                    track = track,
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
         }
+
         composable(
             route = "${Screen.PLAYLIST_DETAILS.route}/{playlistId}",
             arguments = listOf(navArgument("playlistId") { type = NavType.LongType })
         ) { backStackEntry ->
             val playlistId = backStackEntry.arguments?.getLong("playlistId") ?: 0L
-
             PlaylistScreen(
                 playlistId = playlistId,
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    val json = Uri.encode(Gson().toJson(track))
-                    navController.navigate("${Screen.TRACK_DETAILS.route}/$json")
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
         }
@@ -256,4 +247,3 @@ fun MainMenuItem(
         )
     }
 }
-

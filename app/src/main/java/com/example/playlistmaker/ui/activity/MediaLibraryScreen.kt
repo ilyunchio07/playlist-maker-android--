@@ -1,8 +1,10 @@
 package com.example.playlistmaker.ui.activity
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,11 +33,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,9 +68,12 @@ fun MediaLibraryScreen(
     onBackClick: () -> Unit,
     onPlaylistClick: (Long) -> Unit,
     onNewPlaylistClick: () -> Unit,
+    onFavoritesClick: () -> Unit,
     viewModel: PlaylistsViewModel = viewModel(factory = PlaylistsViewModel.Factory)
 ) {
     val playlists by viewModel.playlists.collectAsState(initial = emptyList())
+
+    var playlistToDelete by remember { mutableStateOf<Playlist?>(null) }
 
     Scaffold(
         topBar = {
@@ -132,20 +142,61 @@ fun MediaLibraryScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(playlists) { playlist ->
-                        PlaylistGridItem(playlist = playlist, onClick = { onPlaylistClick(playlist.id) })
+                        PlaylistGridItem(
+                            playlist = playlist,
+                            onClick = { onPlaylistClick(playlist.id) },
+                            onLongClick = { playlistToDelete = playlist }
+                        )
                     }
                 }
             }
+
+        }
+
+        if (playlistToDelete != null) {
+            AlertDialog(
+                onDismissRequest = { playlistToDelete = null },
+                title = { Text(text = "Хотите удалить плейлист?") },
+                text = { Text(text = "Все треки останутся в медиатеке, но плейлист \"${playlistToDelete?.name}\" будет удален.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            playlistToDelete?.let {
+                                viewModel.deletePlaylist(it.id)
+                            }
+                            playlistToDelete = null
+                        }
+                    ) {
+                        Text("Удалить", color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { playlistToDelete = null }) {
+                        Text("Отмена", color = MaterialTheme.colorScheme.primary)
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                textContentColor = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun PlaylistGridItem(playlist: Playlist, onClick: () -> Unit) {
+fun PlaylistGridItem(
+    playlist: Playlist,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit
+) {
     Column(
         modifier = Modifier
-            .clickable(onClick = onClick)
             .fillMaxWidth()
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
     ) {
         val imageModel = playlist.coverImageUrl ?: playlist.coverImageResId
 
