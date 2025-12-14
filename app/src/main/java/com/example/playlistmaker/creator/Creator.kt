@@ -1,56 +1,49 @@
 package com.example.playlistmaker.creator
 
 import android.content.Context
-import androidx.room.Room
+import androidx.datastore.preferences.preferencesDataStore
 import com.example.playlistmaker.data.converters.TrackDbConverter
 import com.example.playlistmaker.data.db.AppDatabase
 import com.example.playlistmaker.data.network.PlaylistsRepositoryImpl
+import com.example.playlistmaker.data.network.RetrofitNetworkClient
 import com.example.playlistmaker.data.network.SearchHistoryRepositoryImpl
 import com.example.playlistmaker.data.network.TracksRepositoryImpl
-import com.example.playlistmaker.data.storage.SearchHistoryPreferences // Импорт нового класса
+import com.example.playlistmaker.data.storage.SearchHistoryPreferences
 import com.example.playlistmaker.domain.api.PlaylistsRepository
 import com.example.playlistmaker.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.domain.api.TracksRepository
 
+private val Context.dataStore by preferencesDataStore(name = "search_history")
+
 object Creator {
-    private var applicationContext: Context? = null
-    private var database: AppDatabase? = null
 
-    // Переменная для хранения нашего класса с SharedPreferences
-    private var searchHistoryPreferences: SearchHistoryPreferences? = null
-
-    fun initialize(context: Context) {
-        applicationContext = context
-
-        // Инициализируем хранилище истории
-        searchHistoryPreferences = SearchHistoryPreferences(context)
-
-        database = Room.databaseBuilder(context, AppDatabase::class.java, "database.db")
-            .fallbackToDestructiveMigration()
-            .build()
+    private fun getDatabase(context: Context): AppDatabase {
+        return AppDatabase.getDatabase(context)
     }
 
-    // ... методы provideTracksRepository и providePlaylistsRepository без изменений ...
-    fun provideTracksRepository(): TracksRepository {
-        return TracksRepositoryImpl(getDatabase(), TrackDbConverter())
+    fun provideTracksRepository(context: Context): TracksRepository {
+        return TracksRepositoryImpl(
+            networkClient = RetrofitNetworkClient(),
+            appDatabase = getDatabase(context),
+            trackDbConverter = TrackDbConverter()
+        )
     }
 
-    fun providePlaylistsRepository(): PlaylistsRepository {
-        return PlaylistsRepositoryImpl(getDatabase(), TrackDbConverter(), applicationContext!!)
+    fun providePlaylistsRepository(context: Context): PlaylistsRepository {
+        return PlaylistsRepositoryImpl(
+            appDatabase = getDatabase(context),
+            trackDbConverter = TrackDbConverter(),
+            context = context
+        )
     }
 
-    // ОБНОВЛЕННЫЙ МЕТОД
-    fun provideSearchHistoryRepository(): SearchHistoryRepository {
-        return SearchHistoryRepositoryImpl(getHistoryPreferences())
+    fun provideSearchHistoryRepository(context: Context): SearchHistoryRepository {
+        return SearchHistoryRepositoryImpl(
+            historyPreferences = provideSearchHistoryPreferences(context)
+        )
     }
 
-    // Вспомогательный метод
-    private fun getDatabase(): AppDatabase {
-        return database ?: throw IllegalStateException("Database not initialized!")
-    }
-
-    // Вспомогательный метод для Preferences
-    private fun getHistoryPreferences(): SearchHistoryPreferences {
-        return searchHistoryPreferences ?: throw IllegalStateException("Preferences not initialized!")
+    fun provideSearchHistoryPreferences(context: Context): SearchHistoryPreferences {
+        return SearchHistoryPreferences(context.dataStore)
     }
 }

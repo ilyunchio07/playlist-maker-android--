@@ -1,5 +1,6 @@
 package com.example.playlistmaker.ui.view_model
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -8,6 +9,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.playlistmaker.creator.Creator
 import com.example.playlistmaker.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.domain.api.TracksRepository
+import com.example.playlistmaker.domain.models.Resource
 import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.domain.models.Word
 import com.example.playlistmaker.ui.state.SearchState
@@ -23,8 +25,8 @@ class SearchViewModel(
     private val searchHistoryRepository: SearchHistoryRepository
 ) : ViewModel() {
 
-    private val _searchScreenState = MutableStateFlow<SearchState>(SearchState.Initial)
-    val searchScreenState: StateFlow<SearchState> = _searchScreenState.asStateFlow()
+    private val _state = MutableStateFlow<SearchState>(SearchState.Initial)
+    val state: StateFlow<SearchState> = _state.asStateFlow()
 
     private val _historyList = MutableStateFlow<List<Word>>(emptyList())
     val historyList: StateFlow<List<Word>> = _historyList.asStateFlow()
@@ -33,75 +35,89 @@ class SearchViewModel(
     private var searchJob: Job? = null
 
     init {
-        loadHistory()
+        viewModelScope.launch {
+            searchHistoryRepository.getHistoryRequests()
+                .collect { history ->
+                    _historyList.value = history
+                }
+        }
     }
 
-    private fun loadHistory() {
-        viewModelScope.launch {
-            searchHistoryRepository.getHistoryRequests().collect { history ->
-                _historyList.value = history
+    fun updateQuery(newQuery: String, immediate: Boolean = false) {
+        if (!immediate && latestSearchText == newQuery) return
+
+        latestSearchText = newQuery
+        searchJob?.cancel()
+
+        if (newQuery.isNotEmpty()) {
+            searchJob = viewModelScope.launch {
+                if (!immediate) {
+                    delay(SEARCH_DEBOUNCE_DELAY)
+                }
+                performSearch(newQuery)
             }
+        } else {
+            renderState(SearchState.Initial)
+        }
+    }
+
+    fun refreshSearch() {
+        if (latestSearchText.isNotEmpty()) {
+            performSearch(latestSearchText)
+        }
+    }
+
+    private fun performSearch(query: String) {
+        renderState(SearchState.Loading)
+
+        viewModelScope.launch {
+            tracksRepository
+                .searchTracks(query)
+                .collect { result ->
+                    when(result) {
+                        is Resource.Success -> {
+                            val tracks = result.data
+                            searchHistoryRepository.addToHistory(Word(query))
+                            if (tracks.isNullOrEmpty()) {
+                                renderState(SearchState.Empty)
+                            } else {
+                                renderState(SearchState.Content(tracks))
+                            }
+                        }
+                        is Resource.Error -> {
+                            renderState(SearchState.Error(result.message))
+                        }
+                    }
+                }
+        }
+    }
+
+    private fun renderState(state: SearchState) {
+        _state.value = state
+    }
+
+    fun addToHistory(track: Track) {
+        viewModelScope.launch {
+            searchHistoryRepository.addToHistory(Word(track.trackName))
         }
     }
 
     fun clearHistory() {
         viewModelScope.launch {
             searchHistoryRepository.clearHistory()
-            _historyList.value = emptyList()
-        }
-    }
-
-    fun updateQuery(newQuery: String) {
-        if (newQuery.isEmpty()) {
-            _searchScreenState.value = SearchState.Initial
-            // loadHistory() // Можно не вызывать, так как Flow сам обновит данные, если они изменятся
-        } else {
-            if (latestSearchText == newQuery) return
-            latestSearchText = newQuery
-            searchDebounce(newQuery)
-        }
-    }
-
-    fun refreshSearch() {
-        if (latestSearchText.isNotEmpty()) {
-            searchRequest(latestSearchText)
-        }
-    }
-
-    private fun searchDebounce(query: String) {
-        searchJob?.cancel()
-        searchJob = viewModelScope.launch {
-            delay(2000L)
-            searchRequest(query)
-        }
-    }
-
-    private fun searchRequest(query: String) {
-        if (query.isNotEmpty()) {
-            _searchScreenState.value = SearchState.Loading
-
-            viewModelScope.launch {
-                try {
-                    val tracks = tracksRepository.searchTracks(query)
-                    if (tracks.isEmpty()) {
-                        _searchScreenState.value = SearchState.Empty
-                    } else {
-                        _searchScreenState.value = SearchState.Content(tracks)
-                        searchHistoryRepository.addToHistory(Word(query))
-                    }
-                } catch (e: Exception) {
-                    _searchScreenState.value = SearchState.Error
-                }
-            }
         }
     }
 
     companion object {
+        private const val SEARCH_DEBOUNCE_DELAY = 2000L
+
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application)
+
                 SearchViewModel(
-                    tracksRepository = Creator.provideTracksRepository(),
-                    searchHistoryRepository = Creator.provideSearchHistoryRepository()
+                    tracksRepository = Creator.provideTracksRepository(application),
+                    searchHistoryRepository = Creator.provideSearchHistoryRepository(application)
                 )
             }
         }
