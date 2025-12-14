@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.playlistmaker.creator.Creator
-import com.example.playlistmaker.data.network.SearchHistoryRepositoryImpl
 import com.example.playlistmaker.domain.api.SearchHistoryRepository
 import com.example.playlistmaker.domain.api.TracksRepository
 import com.example.playlistmaker.domain.models.Resource
@@ -116,13 +115,9 @@ class SearchViewModel(
             initializer {
                 val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application)
 
-                val searchHistoryPrefs = Creator.provideSearchHistoryPreferences(application)
-
-                val searchHistoryRepository = SearchHistoryRepositoryImpl(searchHistoryPrefs)
-
                 SearchViewModel(
                     tracksRepository = Creator.provideTracksRepository(application),
-                    searchHistoryRepository = searchHistoryRepository
+                    searchHistoryRepository = Creator.provideSearchHistoryRepository(application)
                 )
             }
         }

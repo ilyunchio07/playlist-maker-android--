@@ -1,6 +1,5 @@
 package com.example.playlistmaker.ui.activity
 
-import android.app.Application
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -42,8 +41,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.playlistmaker.R
-import com.example.playlistmaker.domain.models.Track
 import com.example.playlistmaker.ui.Screen
+import com.example.playlistmaker.ui.models.TrackUi
+import com.example.playlistmaker.ui.models.toDomain
+import com.example.playlistmaker.ui.models.toUi
 import com.example.playlistmaker.ui.theme.PlaylistMakerTheme
 
 class MainActivity : ComponentActivity() {
@@ -75,7 +76,7 @@ fun PlaylistHost(navController: NavHostController) {
             SearchScreen(
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track.toUi())
                     navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
@@ -104,14 +105,14 @@ fun PlaylistHost(navController: NavHostController) {
             FavoritesScreen(
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track.toUi())
                     navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
         }
 
         composable(Screen.TRACK_DETAILS.route) {
-            val track = navController.previousBackStackEntry?.savedStateHandle?.get<Track>("track")
+            val track = navController.previousBackStackEntry?.savedStateHandle?.get<TrackUi>("track")?.toDomain()
             if (track != null) {
                 TrackDetailsScreen(
                     track = track,
@@ -129,7 +130,7 @@ fun PlaylistHost(navController: NavHostController) {
                 playlistId = playlistId,
                 onBackClick = { navController.popBackStack() },
                 onTrackClick = { track ->
-                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track)
+                    navController.currentBackStackEntry?.savedStateHandle?.set("track", track.toUi())
                     navController.navigate(Screen.TRACK_DETAILS.route)
                 }
             )
