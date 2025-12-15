@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -61,11 +61,11 @@ fun HistoryRequests(
             }
 
             if (index != historyList.lastIndex) {
-                Divider(color = YP_TEXT_GRAY.copy(alpha = 0.2f), thickness = 1.dp)
+                HorizontalDivider(color = YP_TEXT_GRAY.copy(alpha = 0.2f), thickness = 1.dp)
             }
         }
 
-        Divider(color = YP_TEXT_GRAY.copy(alpha = 0.2f), thickness = 1.dp)
+        HorizontalDivider(color = YP_TEXT_GRAY.copy(alpha = 0.2f), thickness = 1.dp)
 
         Text(
             text = stringResource(id = R.string.clear_history),
