@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,26 +37,26 @@ import java.util.Locale
 fun TrackListItem(
     track: Track,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-    showArrow: Boolean = false
+    onLongClick: (() -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 6.dp, horizontal = 16.dp)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = { onLongClick?.invoke() }
+                onLongClick = onLongClick
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
             model = track.artworkUrl100,
-            contentDescription = stringResource(R.string.track_cover_description),
+            contentDescription = "Track Cover",
             placeholder = painterResource(id = R.drawable.ic_music),
             error = painterResource(id = R.drawable.ic_music),
+            fallback = painterResource(id = R.drawable.ic_music),
             modifier = Modifier
-                .size(45.dp)
+                .size(48.dp)
                 .clip(RoundedCornerShape(2.dp)),
             contentScale = ContentScale.Crop
         )
@@ -67,31 +66,40 @@ fun TrackListItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = track.trackName,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            val formattedTime = SimpleDateFormat("mm:ss", Locale.getDefault()).format(track.trackTimeMillis)
-
-            Text(
-                text = "${track.artistName} • $formattedTime",
-                style = MaterialTheme.typography.bodyMedium,
-                fontSize = 13.sp,
-                color = YP_TEXT_GRAY,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = track.artistName,
+                    fontSize = 11.sp,
+                    color = YP_TEXT_GRAY,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+                Text(
+                    text = " • ",
+                    fontSize = 11.sp,
+                    color = YP_TEXT_GRAY
+                )
+                val time = SimpleDateFormat("mm:ss", Locale.getDefault()).format(track.trackTimeMillis)
+                Text(
+                    text = time,
+                    fontSize = 11.sp,
+                    color = YP_TEXT_GRAY
+                )
+            }
         }
 
-        if (showArrow) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = YP_TEXT_GRAY
-            )
-        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = YP_TEXT_GRAY,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }

@@ -1,5 +1,6 @@
 package com.example.playlistmaker.ui.view_model
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -16,19 +17,8 @@ class PlaylistsViewModel(
     private val playlistsRepository: PlaylistsRepository
 ) : ViewModel() {
 
-    // ИСПРАВЛЕНИЕ 1: Было getAllPlaylists(), стало getPlaylists()
     val playlists: Flow<List<Playlist>> = playlistsRepository.getPlaylists()
 
-    // ИСПРАВЛЕНИЕ 2: Было addNewPlaylist, стало createPlaylist
-    fun createNewPlaylist(name: String, description: String, coverImageUri: String?) {
-        viewModelScope.launch(Dispatchers.IO) {
-            playlistsRepository.createPlaylist(name, description, coverImageUri)
-        }
-    }
-
-    // ИСПРАВЛЕНИЕ 3: Было deletePlaylistById, стало deletePlaylist
-    // (Если вы не используете удаление в UI, этот метод можно вообще убрать,
-    // но чтобы починить ошибку, вот правильный вызов):
     fun deletePlaylist(playlistId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             playlistsRepository.deletePlaylist(playlistId)
@@ -38,8 +28,9 @@ class PlaylistsViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application)
                 PlaylistsViewModel(
-                    playlistsRepository = Creator.providePlaylistsRepository()
+                    playlistsRepository = Creator.providePlaylistsRepository(application)
                 )
             }
         }

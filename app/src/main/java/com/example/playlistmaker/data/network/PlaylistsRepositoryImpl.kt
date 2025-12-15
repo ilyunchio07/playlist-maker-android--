@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -48,9 +49,8 @@ class PlaylistsRepositoryImpl(
     }
 
     override fun getPlaylists(): Flow<List<Playlist>> {
-        return flow {
-            val entities = appDatabase.playlistDao().getPlaylists()
-            emit(entities.map { convertEntityToPlaylist(it) })
+        return appDatabase.playlistDao().getPlaylists().map { entities ->
+            entities.map { convertEntityToPlaylist(it) }
         }.flowOn(Dispatchers.IO)
     }
 
@@ -109,6 +109,9 @@ class PlaylistsRepositoryImpl(
     }
 
     override suspend fun deletePlaylist(playlistId: Long) {
+        withContext(Dispatchers.IO) {
+            appDatabase.playlistDao().deletePlaylistById(playlistId)
+        }
     }
 
     private fun convertEntityToPlaylist(entity: PlaylistEntity): Playlist {
@@ -142,5 +145,15 @@ class PlaylistsRepositoryImpl(
             return ""
         }
         return file.absolutePath
+    }
+
+    override fun getTracksByPlaylistId(trackIds: List<String>): Flow<List<Track>> = flow {
+        val trackEntities = appDatabase.trackDao().getTracksByIds(trackIds)
+
+        val tracks = trackEntities.map { trackEntity ->
+            trackDbConverter.map(trackEntity)
+        }
+
+        emit(tracks)
     }
 }

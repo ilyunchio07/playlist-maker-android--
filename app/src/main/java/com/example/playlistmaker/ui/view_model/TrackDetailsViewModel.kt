@@ -1,5 +1,6 @@
 package com.example.playlistmaker.ui.view_model
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -52,9 +53,11 @@ class TrackDetailsViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
+                val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Application)
+
                 TrackDetailsViewModel(
-                    tracksRepository = Creator.provideTracksRepository(),
-                    playlistsRepository = Creator.providePlaylistsRepository()
+                    tracksRepository = Creator.provideTracksRepository(application),
+                    playlistsRepository = Creator.providePlaylistsRepository(application)
                 )
             }
         }

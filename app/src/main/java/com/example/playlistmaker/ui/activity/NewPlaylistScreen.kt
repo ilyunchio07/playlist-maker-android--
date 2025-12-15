@@ -6,7 +6,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,10 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,23 +47,22 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.playlistmaker.R
-import com.example.playlistmaker.ui.theme.YP_LIGHT_GRAY
 import com.example.playlistmaker.ui.theme.YP_TEXT_GRAY
-import com.example.playlistmaker.ui.view_model.PlaylistsViewModel
+import com.example.playlistmaker.ui.view_model.NewPlaylistViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NewPlaylistScreen(
     onBackClick: () -> Unit,
-    viewModel: PlaylistsViewModel = viewModel(factory = PlaylistsViewModel.Factory)
+    viewModel: NewPlaylistViewModel = viewModel(factory = NewPlaylistViewModel.Factory)
 ) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var coverUri by remember { mutableStateOf<Uri?>(null) }
+    val name by viewModel.playlistName.collectAsState()
+    val description by viewModel.playlistDescription.collectAsState()
+    val coverUri by viewModel.coverUri.collectAsState()
 
     val pickMedia = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
-            coverUri = uri
+            viewModel.onImageSelected(uri)
         }
     }
 
@@ -102,7 +98,6 @@ fun NewPlaylistScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
@@ -110,7 +105,6 @@ fun NewPlaylistScreen(
                     .background(Color(0xFFE6E8EB), RoundedCornerShape(8.dp))
                     .clip(RoundedCornerShape(8.dp))
                     .clickable {
-
                         pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     },
                 contentAlignment = Alignment.Center
@@ -123,7 +117,6 @@ fun NewPlaylistScreen(
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
-
                     Image(
                         painter = painterResource(id = R.drawable.ic_music),
                         contentDescription = "Добавить обложку",
@@ -138,7 +131,7 @@ fun NewPlaylistScreen(
 
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { viewModel.onNameChanged(it) },
                 label = { Text("Название*") },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(fontSize = 16.sp),
@@ -156,7 +149,7 @@ fun NewPlaylistScreen(
 
             OutlinedTextField(
                 value = description,
-                onValueChange = { description = it },
+                onValueChange = { viewModel.onDescriptionChanged(it) },
                 label = { Text("Описание") },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = TextStyle(fontSize = 16.sp),
@@ -174,8 +167,7 @@ fun NewPlaylistScreen(
 
             Button(
                 onClick = {
-                    if (name.isNotEmpty()) {
-                        viewModel.createNewPlaylist(name, description, coverUri?.toString())
+                    viewModel.createPlaylist {
                         onBackClick()
                     }
                 },
